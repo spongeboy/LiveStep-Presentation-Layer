@@ -1,0 +1,235 @@
+ 
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+	<title>Amped Seq Live</title> 
+	<script src="h5utils.js"></script> 
+	<script src="jquery-1.4.2.min.js"></script> 
+</head> 
+ 
+ 
+<body style="margin:0;background-color:black;" > 
+
+ 
+<!--<script src="http://cdn.socket.io/stable/socket.io.js"></script> --> 
+
+<script src="socket.io.js"></script>
+<script>io.setPath('/Users/patmacpherson/Desktop/amped/pl')</script>  
+<script> 
+ 
+ 
+function log(logText) {
+	//log.innerHTML = '<li>' + logText + '</li>' + log.innerHTML;
+	console.log(logText);
+}
+ 
+nextAudioId = 1;
+nextVideoId = 1;
+ 
+//var node_server_url = '10.0.2.1';
+socket = new io.Socket("10.0.2.1",{port:8080});
+ 
+socket.on('connect', 
+	function(){ 
+		log("Connected");
+	}) 
+ 
+socket.on('message', 
+	function(JSONmsg){ 
+		msg = JSON.parse(JSONmsg);
+		//console.log(msg.command);
+		log(JSON.stringify(JSONmsg));
+ 
+		//console.log(JSON.parse(msg));
+		
+		if (msg.command == "buffer") {
+			addAudio(msg.id, msg.path);
+		}	
+ 
+		if (msg.command == "play") {
+	
+			//log(JSON.stringify(msg));
+ 
+			if (msg.id < 3 || msg.id > 12) {
+				log("Play audio:" + msg.id);
+				playAudioOnBeat(msg.id);
+			}
+			 else {
+				log("Play video:" + msg.id);
+				playVideoOnBeat(msg.id);
+			}
+			
+		}
+ 
+		if (msg.command == "stop") {
+			stopAudio('audio' + msg.id);
+		}
+ 
+		if (msg.beat == 9) {
+			
+			if (nextAudioId != 0) {
+				
+				playAudioOnBeat(nextAudioId);
+			}
+			if (nextVideoId != 0) {
+				log("Play video:" + nextVideoId);
+				playVideoOnBeat(nextVideoId);
+			}
+			
+		}	
+ 
+	})
+ 
+socket.on('disconnect', 
+	function(){ 
+		log("Disconnect");
+	})
+ 
+ 
+socket.connect();
+ 
+ 
+ 
+ 
+function sendMessage(textToSend) {
+	socket.send(textToSend);
+}
+ 
+function addAudio(id, path) {
+	if ($("#audio" + id).length == 0) {
+		$("#audioList").append('<audio id="audio' + id + '" src="'+ path +'" preload="all" />');
+	}
+}
+ 
+function playAudio(id) {
+	nextAudioId = id;
+}
+ 
+function playAudioOnBeat(id) {
+	document.getElementById("audio" + id).play();
+	nextAudioId = 0;
+}
+ 
+function stopAudio(id) {
+	document.getElementById(id).pause();
+	document.getElementById(id).currentTime=0;
+}
+ 
+function addVideo(id, path) {
+	if ($("#video" + id).length == 0) {
+		$("#videoList").append('<video id="video' + id + '" src="'+ path +'" preload="all" />');
+	}
+}
+ 
+function playVideo(id) {
+	nextVideoId = id;
+}
+ 
+function playVideoOnBeat(id) {
+	document.getElementById("MainDisplay").src = document.getElementById("video" + id).src;
+	document.getElementById("MainDisplay").volume = 0;
+	document.getElementById("MainDisplay").play();
+	//document.getElementById(id).volume = 0;
+	//document.getElementById(id).play();
+	nextVideoId = 0;
+}
+ 
+function stopVideo(id) {
+	document.getElementById(id).pause();
+	document.getElementById(id).currentTime=0;
+}
+ 
+ 
+function preLoadAllResources() {
+	
+ 
+}
+ 
+ 
+$('#sendMessage').click(function() {
+  eventData.preventDefault();
+  sendMessage($('#chat').val());
+  log( $('#chat').val() );
+  return false;
+});
+ 
+$("#SendHello").click(function(eventData) {
+	eventData.preventDefault();
+	sendMessage('Hello!');
+	return false;
+});
+ 
+ 
+ 
+</script> 
+ 
+ 
+<video id="MainDisplay" width="100%" height="100%" ></video> 
+
+ 
+<div style="display:none;"> 
+ 
+<form id="sendMessageForm" onsubmit="return false;"> 
+    <input type="text" id="chat" placeholder="type and press enter to chat" /> 
+	<button id="sendMessage">Send Hello</button> 
+</form> 
+ 
+<form id="playAudio"> 
+<button id="AddAudio" onclick="addAudio('1', 'krautogg/claps cym.ogg'); return false;" >Add</button> 
+<button id="Play" onclick="playAudio('audio1'); return false;" >Play</button> 
+<button id="Stop" onclick="stopAudio('audio1'); return false;" >Stop</button> 
+ 
+<button id="SendHello" >Send Hello</button> 
+</form> 
+ 
+<form id="playVideo"> 
+<button id="AddVideo" onclick="addVideo('1', 'vids/clip1.m4v'); return false;" >Add</button> 
+<button id="Play" onclick="playVideo('video1'); return false;" >Play</button> 
+<button id="Stop" onclick="stopVideo('video1'); return false;" >Stop</button> 
+ 
+<button id="SendHello" >Send Hello</button> 
+</form> 
+ 
+ 
+Video Buffer
+<div id="videoList"> 
+<video id="video1" src="vids/clip1.m4v" preload="all"  ></video> 
+<video id="video2" src="vids/clip2.m4v" preload="all"  ></video> 
+<video id="video3" src="vids/clip3.m4v" preload="all"  ></video> 
+<video id="video4" src="vids/clip4.m4v" preload="all"  ></video> 
+<video id="video5" src="vids/clip5.m4v" preload="all"  ></video> 
+<video id="video6" src="vids/clip6.m4v" preload="all"  ></video> 
+<video id="video7" src="vids/clip7.m4v" preload="all"  ></video> 
+<video id="video8" src="vids/clip8.m4v" preload="all"  ></video> 
+<video id="video9" src="vids/clip9.m4v" preload="all"  ></video> 
+<video id="video10" src="vids/clip10.m4v" preload="all"  ></video> 
+<video id="video11" src="vids/clip11.m4v" preload="all"  ></video> 
+<video id="video12" src="vids/clip12.m4v" preload="all"  ></video> 
+</div> 
+ 
+Audio Buffer
+<div id="audioList"> 
+<audio id="audio1" src="krautogg\claps cym.ogg" preload="all" ></audio> 
+<audio id="audio2" src="krautogg\claps.ogg" preload="all" ></audio> 
+<audio id="audio13" src="krautogg\guitar 1.ogg" preload="all" ></audio> 
+<audio id="audio14" src="krautogg\guitar 2.ogg" preload="all" ></audio> 
+<audio id="audio15" src="krautogg\guitar 3.ogg" preload="all" ></audio> 
+<audio id="audio16" src="krautogg\kit 1.ogg" preload="all" ></audio> 
+<audio id="audio17" src="krautogg\kit 2.ogg" preload="all" ></audio> 
+<audio id="audio18" src="krautogg\kit fill.ogg" preload="all" ></audio> 
+<audio id="audio19" src="krautogg\lead 1.ogg" preload="all" ></audio> 
+<audio id="audio20" src="krautogg\lead 2.ogg" preload="all" ></audio> 
+<audio id="audio21" src="krautogg\tamb.ogg" preload="all" ></audio> 
+<audio id="audio0" src="krautogg\tamb.ogg" preload="all" ></audio> 
+</div> 
+ 
+Log:
+<ul id="log"></ul> 
+ 
+ 
+</div> 
+ 
+ 
+ 
+ 
+</body>
